@@ -18,11 +18,10 @@ import org.specs2.mutable._
 
 import org.junit.runner.RunWith
 import org.specs2.runner.JUnitRunner
-import org.specs2.specification.{Step, Fragments}
+import org.specs2.specification.{ Step, Fragments }
 
 import scala.concurrent._
 import scala.concurrent.duration.Duration
-
 
 // import play.api.libs.json._
 // import play.api.libs.functional._
@@ -53,14 +52,14 @@ class ShapotomicSpec extends Specification {
     }
 
     // schema attributes
-    val name        = Attribute(ns.koala / "name", SchemaType.string, Cardinality.one).withDoc("Koala's name")
-    val age         = Attribute(ns.koala / "age", SchemaType.long, Cardinality.one).withDoc("Koala's age")
-    val trees       = Attribute(ns.koala / "trees", SchemaType.string, Cardinality.many).withDoc("Koala's trees")
-    
+    val name = Attribute(ns.koala / "name", SchemaType.string, Cardinality.one).withDoc("Koala's name")
+    val age = Attribute(ns.koala / "age", SchemaType.long, Cardinality.one).withDoc("Koala's age")
+    val trees = Attribute(ns.koala / "trees", SchemaType.string, Cardinality.many).withDoc("Koala's trees")
+
     // Draft playing with Datomisca and Shapeless Fields/Records
-    val fieldName   = DField(name)
-    val fieldAge    = DField(age)
-    val fieldTrees  = DField(trees)
+    val fieldName = DField(name)
+    val fieldAge = DField(age)
+    val fieldTrees = DField(trees)
 
     // the schema in HList form
     val schema = name :: age :: trees :: HNil
@@ -71,13 +70,13 @@ class ShapotomicSpec extends Specification {
   }
 
   def startDB = {
-    println(s"Creating DB with uri $uri: "+ createDatabase(uri))
+    println(s"Creating DB with uri $uri: " + createDatabase(uri))
 
     Await.result(
       Datomic.transact(Koala.txData),
       Duration("2 seconds")
     )
-  } 
+  }
 
   def stopDB = {
     deleteDatabase(uri)
@@ -88,13 +87,13 @@ class ShapotomicSpec extends Specification {
   override def map(fs: => Fragments) = Step(startDB) ^ fs ^ Step(stopDB)
 
   "shapotomic" should {
-    
+
     "convert HList to Datomic Facts & Datomic Entities from HList" in {
       // creates a Temporary ID & keeps it for resolving entity after insertion
       val id = DId(Partition.USER)
       // creates an HList entity 
-      val hListEntity = 
-        id :: "kaylee" :: 3L :: Set( "manna_gum", "tallowwood" ) ::  HNil
+      val hListEntity =
+        id :: "kaylee" :: 3L :: Set("manna_gum", "tallowwood") :: HNil
 
       // builds Datomisca Entity facts statically checking at compile-time HList against Schema
       val txData = hListEntity.toAddEntity(Koala.schema)
@@ -108,26 +107,24 @@ class ShapotomicSpec extends Specification {
         // Explicitly typing the val to show that the compiler builds the right HList from schema
         val postHListEntity: Long :: String :: Long :: Set[String] :: HNil = e.toHList(Koala.schema)
 
-        postHListEntity must beEqualTo( e.id :: "kaylee" :: 3L :: Set( "manna_gum", "tallowwood" ) :: HNil )
+        postHListEntity must beEqualTo(e.id :: "kaylee" :: 3L :: Set("manna_gum", "tallowwood") :: HNil)
       }
-      
+
       Await.result(tx, Duration("3 seconds"))
-
       success
-
     }
 
     "Draft test: Field/Record" in {
       import Record._
 
-      val koala = 
-        Koala.fieldName   -> "kaylee"                         ::
-        Koala.fieldAge    -> 3L                               ::
-        Koala.fieldTrees  -> Set( "manna_gum", "tallowwood" ) ::
-        HNil
+      val koala =
+        Koala.fieldName -> "kaylee" ::
+          Koala.fieldAge -> 3L ::
+          Koala.fieldTrees -> Set("manna_gum", "tallowwood") ::
+          HNil
 
-      println("name:"+koala.get(Koala.fieldName))
-      println("age:"+koala.get(Koala.fieldAge))
+      println("name:" + koala.get(Koala.fieldName))
+      println("age:" + koala.get(Koala.fieldAge))
 
       success
     }
