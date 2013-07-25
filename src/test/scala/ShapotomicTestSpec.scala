@@ -94,9 +94,7 @@ class ShapotomicSpec extends Specification {
       val id = DId(Partition.USER)
       // creates an HList entity 
       val hListEntity = 
-        id :: "kaylee" :: 3L :: 
-        Set( "manna_gum", "tallowwood" ) :: 
-        HNil
+        id :: "kaylee" :: 3L :: Set( "manna_gum", "tallowwood" ) ::  HNil
 
       // builds Datomisca Entity facts statically checking at compile-time HList against Schema
       val txData = hListEntity.toAddEntity(Koala.schema)
@@ -104,7 +102,7 @@ class ShapotomicSpec extends Specification {
       // inserts data into Datomic
       val tx = Datomic.transact(txData) map { tx =>
         // resolves real DEntity from temporary ID
-        val e = Datomic.resolveEntity(tx, id)
+        val e = tx.resolveEntity(id)
 
         // rebuilds HList entity from DEntity statically typed by schema
         // Explicitly typing the val to show that the compiler builds the right HList from schema
@@ -133,7 +131,5 @@ class ShapotomicSpec extends Specification {
 
       success
     }
-
   }
-
 }

@@ -33,7 +33,7 @@ package object `shapotomic` {
                            (implicit pull: Pullback2[L, SL, PartialAddEntity]) 
                   : Pullback2[ TempId :: L, SL, AddEntity] = 
       at[TempId :: L, SL]{ (hl, s) =>
-        AddEntity(hl.head, SchemaCheckerFromHList(hl.tail, s))
+        Entity.add(hl.head, SchemaCheckerFromHList(hl.tail, s))
       }
 
     implicit def caseHList[H, DD <: DatomicData, L <: HList, SL <: HList, Card <: Cardinality]
@@ -44,17 +44,6 @@ package object `shapotomic` {
         a2pw.convert(sl.head).write(hl.head) ++
         SchemaCheckerFromHList(hl.tail, sl.tail)
       }
-
-    /** overloading for RawAttribute as HList is not covariant (hopefully :)) */
-    implicit def caseHListRawAttr[H, DD <: DatomicData, L <: HList, SL <: HList, Card <: Cardinality]
-                                 (implicit a2pw: Attribute2PartialAddEntityWriter[DD, Card, H],
-                                           pull: Pullback2[L, SL, PartialAddEntity])
-                  : Pullback2[ H :: L, RawAttribute[DD, Card] :: SL, PartialAddEntity] = 
-      at[H :: L, RawAttribute[DD, Card] :: SL]{ (hl, sl) =>
-        a2pw.convert(sl.head).write(hl.head) ++
-        SchemaCheckerFromHList(hl.tail, sl.tail)
-      }
-    
   }
 
   /** Polymorphic function extracting typed fields from DEntity using an existing schema
@@ -70,17 +59,6 @@ package object `shapotomic` {
                 pull: Pullback2[DEntity, SL, HL]): 
       Pullback2[DEntity, Attribute[DD, Card] :: SL, H :: HL] =
         at[DEntity, Attribute[DD, Card] :: SL] { (entity, sl) =>
-          val attr = sl.head
-          val h: H = entity(attr)
-          h :: SchemaCheckerFromDEntity(entity, sl.tail)
-        }
-
-    /** overloading for RawAttribute as HList is not covariant (hopefully :)) */
-    implicit def caseHListRawAttribute[H, DD <: DatomicData, HL <: HList, SL <: HList, Card <: Cardinality]
-      (implicit a2er: Attribute2EntityReaderInj[DD, Card, H],
-                pull: Pullback2[DEntity, SL, HL]): 
-      Pullback2[DEntity, RawAttribute[DD, Card] :: SL, H :: HL] =
-        at[DEntity, RawAttribute[DD, Card] :: SL] { (entity, sl) =>
           val attr = sl.head
           val h: H = entity(attr)
           h :: SchemaCheckerFromDEntity(entity, sl.tail)
